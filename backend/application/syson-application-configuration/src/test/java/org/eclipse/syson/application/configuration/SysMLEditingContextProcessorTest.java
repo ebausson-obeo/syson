@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.eclipse.syson.application.configuration;
 
+import static org.eclipse.syson.application.configuration.SysMLStandardLibrariesConfiguration.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
@@ -71,12 +72,12 @@ public class SysMLEditingContextProcessorTest {
     @Test
     void loadKerMLLibraries() throws IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        org.springframework.core.io.Resource[] resources = resolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + "kerml.libraries/" + "*." + JsonResourceFactoryImpl.EXTENSION);
+        org.springframework.core.io.Resource[] resources = resolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + KERML_LIBRARY_PATH + "*." + JsonResourceFactoryImpl.EXTENSION);
         for (org.springframework.core.io.Resource resource : resources) {
             String libraryFilePath = resource.getFilename();
-            ClassPathResource classPathResource = new ClassPathResource("kerml.libraries/" + libraryFilePath);
+            ClassPathResource classPathResource = new ClassPathResource(KERML_LIBRARY_PATH + libraryFilePath);
             String path = classPathResource.getPath();
-            URI uri = URI.createURI(SysMLStandardLibrariesConfiguration.KERML_LIBRARY_SCHEME + ":///" + UUID.nameUUIDFromBytes(path.getBytes()));
+            URI uri = URI.createURI(KERML_LIBRARY_SCHEME + ":///" + UUID.nameUUIDFromBytes(path.getBytes()));
             Resource emfResource = resourceSet.getResource(uri, false);
             assertNotNull(emfResource, "Unable to load " + libraryFilePath);
         }
@@ -85,14 +86,32 @@ public class SysMLEditingContextProcessorTest {
     @Test
     void loadSysMLLibraries() throws IOException {
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        org.springframework.core.io.Resource[] resources = resolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + "sysml.libraries/" + "*." + JsonResourceFactoryImpl.EXTENSION);
+        org.springframework.core.io.Resource[] resources = resolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + SYSML_LIBRARY_PATH + "*." + JsonResourceFactoryImpl.EXTENSION);
         for (org.springframework.core.io.Resource resource : resources) {
             String libraryFilePath = resource.getFilename();
-            ClassPathResource classPathResource = new ClassPathResource("sysml.libraries/" + libraryFilePath);
+            ClassPathResource classPathResource = new ClassPathResource(SYSML_LIBRARY_PATH + libraryFilePath);
             String path = classPathResource.getPath();
-            URI uri = URI.createURI(SysMLStandardLibrariesConfiguration.SYSML_LIBRARY_SCHEME + ":///" + UUID.nameUUIDFromBytes(path.getBytes()));
+            URI uri = URI.createURI(SYSML_LIBRARY_SCHEME + ":///" + UUID.nameUUIDFromBytes(path.getBytes()));
             Resource emfResource = resourceSet.getResource(uri, false);
             assertNotNull(emfResource, "Unable to load " + libraryFilePath);
         }
+    }
+
+    @Test
+    void testSysMLAliasIntegration() throws IOException {
+        String libPath = "ISQSpaceTime.json";
+        URI uri = getSysMLResourceURI(libPath);
+        Resource emfResource = resourceSet.getResource(uri, false);
+        assertNotNull(emfResource, "Unable to load " + libPath);
+    }
+
+
+    protected URI getSysMLResourceURI(String filePath) {
+        return getResourceURI(SYSML_LIBRARY_SCHEME, SYSML_LIBRARY_PATH, filePath);
+    }
+
+    private URI getResourceURI(String libraryScheme, String libraryPath,  String filePath) {
+        ClassPathResource classPathResource = new ClassPathResource(libraryPath + filePath);
+        return URI.createURI(libraryScheme + ":///" + UUID.nameUUIDFromBytes(classPathResource.getPath().getBytes()));
     }
 }

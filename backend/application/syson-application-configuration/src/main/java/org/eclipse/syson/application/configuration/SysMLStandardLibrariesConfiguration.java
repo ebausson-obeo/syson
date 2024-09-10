@@ -50,6 +50,10 @@ public class SysMLStandardLibrariesConfiguration {
 
     public static final String SYSML_LIBRARY_SCHEME = "sysmllibrary";
 
+    public static final String KERML_LIBRARY_PATH = "kerml.libraries/";
+
+    public static final String SYSML_LIBRARY_PATH = "sysml.libraries/";
+
     private final Logger logger = LoggerFactory.getLogger(SysMLStandardLibrariesConfiguration.class);
 
     private final ResourceSet librariesResourceSet;
@@ -60,8 +64,8 @@ public class SysMLStandardLibrariesConfiguration {
         EPackageRegistryImpl ePackageRegistry = new EPackageRegistryImpl();
         ePackageRegistry.put(SysmlPackage.eNS_URI, SysmlPackage.eINSTANCE);
         this.librariesResourceSet.setPackageRegistry(ePackageRegistry);
-        this.loadResourcesFrom(this.librariesResourceSet, "kerml.libraries/", KERML_LIBRARY_SCHEME);
-        this.loadResourcesFrom(this.librariesResourceSet, "sysml.libraries/", SYSML_LIBRARY_SCHEME);
+        this.loadResourcesFrom(this.librariesResourceSet, KERML_LIBRARY_PATH, KERML_LIBRARY_SCHEME);
+        this.loadResourcesFrom(this.librariesResourceSet, SYSML_LIBRARY_PATH, SYSML_LIBRARY_SCHEME);
         EMFUtils.resolveAllNonDerived(this.librariesResourceSet);
         Instant finish = Instant.now();
         long timeElapsed = Duration.between(start, finish).toMillis();
