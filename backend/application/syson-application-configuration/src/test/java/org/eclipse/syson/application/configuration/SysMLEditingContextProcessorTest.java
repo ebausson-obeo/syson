@@ -13,12 +13,10 @@
 package org.eclipse.syson.application.configuration;
 
 import static org.eclipse.syson.application.configuration.SysMLStandardLibrariesConfiguration.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.util.URI;
@@ -34,6 +32,8 @@ import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
 import org.eclipse.sirius.emfjson.resource.JsonResourceFactoryImpl;
 import org.eclipse.sirius.web.application.editingcontext.EditingContext;
+import org.eclipse.syson.sysml.Element;
+import org.eclipse.syson.sysml.Membership;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -75,10 +75,7 @@ public class SysMLEditingContextProcessorTest {
         org.springframework.core.io.Resource[] resources = resolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + KERML_LIBRARY_PATH + "*." + JsonResourceFactoryImpl.EXTENSION);
         for (org.springframework.core.io.Resource resource : resources) {
             String libraryFilePath = resource.getFilename();
-            ClassPathResource classPathResource = new ClassPathResource(KERML_LIBRARY_PATH + libraryFilePath);
-            String path = classPathResource.getPath();
-            URI uri = URI.createURI(KERML_LIBRARY_SCHEME + ":///" + UUID.nameUUIDFromBytes(path.getBytes()));
-            Resource emfResource = resourceSet.getResource(uri, false);
+            Resource emfResource = resourceSet.getResource(getKerMLResourceURI(libraryFilePath), false);
             assertNotNull(emfResource, "Unable to load " + libraryFilePath);
         }
     }
@@ -89,22 +86,36 @@ public class SysMLEditingContextProcessorTest {
         org.springframework.core.io.Resource[] resources = resolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + SYSML_LIBRARY_PATH + "*." + JsonResourceFactoryImpl.EXTENSION);
         for (org.springframework.core.io.Resource resource : resources) {
             String libraryFilePath = resource.getFilename();
-            ClassPathResource classPathResource = new ClassPathResource(SYSML_LIBRARY_PATH + libraryFilePath);
-            String path = classPathResource.getPath();
-            URI uri = URI.createURI(SYSML_LIBRARY_SCHEME + ":///" + UUID.nameUUIDFromBytes(path.getBytes()));
-            Resource emfResource = resourceSet.getResource(uri, false);
+            Resource emfResource = resourceSet.getResource(getSysMLResourceURI(libraryFilePath), false);
             assertNotNull(emfResource, "Unable to load " + libraryFilePath);
         }
     }
 
     @Test
-    void testSysMLAliasIntegration() throws IOException {
-        String libPath = "ISQSpaceTime.json";
-        URI uri = getSysMLResourceURI(libPath);
-        Resource emfResource = resourceSet.getResource(uri, false);
-        assertNotNull(emfResource, "Unable to load " + libPath);
+    void testSysMLIntegration() throws IOException {
+        Resource emfResource = resourceSet.getResource(getSysMLResourceURI("ISQSpaceTime.json"), false);
+        HashMap<String, Element> namedContent = parseNamedContent(emfResource);
+
+        // testing Alias
+        Element breadth = namedContent.get("breadth");
+        assertNotNull(breadth, "Unable to find Element 'breadth' in library ISQSpaceTime.");
+        assertInstanceOf(Membership.class, breadth, "Element 'breadth' in library ISQSpaceTime is not a Membership.");
+        assertEquals("width", ((Membership) breadth).getMemberElement().getDeclaredName());
     }
 
+    protected HashMap<String, Element> parseNamedContent(Resource resource) {
+        HashMap<String, Element> namedContent = new HashMap<>();
+        resource.getAllContents().forEachRemaining(eObject -> {
+            if (eObject instanceof Element element && element.getDeclaredName() != null) {
+                namedContent.put(element.getDeclaredName(), element);
+            }
+        });
+        return namedContent;
+    }
+
+    protected URI getKerMLResourceURI(String filePath) {
+        return getResourceURI(KERML_LIBRARY_SCHEME, KERML_LIBRARY_PATH, filePath);
+    }
 
     protected URI getSysMLResourceURI(String filePath) {
         return getResourceURI(SYSML_LIBRARY_SCHEME, SYSML_LIBRARY_PATH, filePath);
