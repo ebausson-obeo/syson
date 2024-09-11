@@ -32,8 +32,7 @@ import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
 import org.eclipse.sirius.emfjson.resource.JsonResourceFactoryImpl;
 import org.eclipse.sirius.web.application.editingcontext.EditingContext;
-import org.eclipse.syson.sysml.Element;
-import org.eclipse.syson.sysml.Membership;
+import org.eclipse.syson.sysml.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -96,14 +95,93 @@ public class SysMLEditingContextProcessorTest {
         Resource emfResource = resourceSet.getResource(getSysMLResourceURI("ISQSpaceTime.json"), false);
         HashMap<String, Element> namedContent = parseNamedContent(emfResource);
 
+//       Membership
         // testing Alias
-        Element breadth = namedContent.get("breadth");
-        assertNotNull(breadth, "Unable to find Element 'breadth' in library ISQSpaceTime.");
-        assertInstanceOf(Membership.class, breadth, "Element 'breadth' in library ISQSpaceTime is not a Membership.");
-        assertEquals("width", ((Membership) breadth).getMemberElement().getDeclaredName());
+        Element breadthElement = namedContent.get("breadth");
+        assertNotNull(breadthElement, "Unable to find Element 'breadth' in library ISQSpaceTime.");
+        assertInstanceOf(Membership.class, breadthElement, "Element 'breadth' in library ISQSpaceTime is not a Membership.");
+        Membership membership = (Membership) breadthElement;
+        assertEquals("width", membership.getMemberElement().getDeclaredName());
+
+//      FeatureTyping
+        Element frequencyValueElement = namedContent.get("FrequencyValue");
+        assertNotNull(frequencyValueElement, "Unable to find Element 'FrequencyValue' in library ISQSpaceTime.");
+        assertInstanceOf(FeatureTyping.class, frequencyValueElement, "Element 'FrequencyValue' in library ISQSpaceTime is not a FeatureTyping.");
+        FeatureTyping featureTyping = (FeatureTyping) frequencyValueElement;
+        assertInstanceOf(AttributeDefinition.class, featureTyping.getType());
+
+//      MembershipImport
+        Element scalarValuesRealElement = namedContent.get("ScalarValues::Real");
+        assertNotNull(scalarValuesRealElement, "Unable to find Element 'ScalarValues::Real' in library ISQSpaceTime.");
+        assertInstanceOf(MembershipImport.class, scalarValuesRealElement);
+        MembershipImport scalarValuesReal = (MembershipImport) scalarValuesRealElement;
+        assertEquals(VisibilityKind.PRIVATE, scalarValuesReal.getVisibility());
+        assertEquals("ScalarValues::Real", scalarValuesReal.getDeclaredName());
+
+//      AttributeUsage
+        Element azimuthElement = namedContent.get("azimuth");
+        assertNotNull(azimuthElement, "Unable to find Element 'azimuth' in library ISQSpaceTime.");
+        assertInstanceOf(AttributeUsage.class, azimuthElement);
+        AttributeUsage azimuth = (AttributeUsage) azimuthElement;
+        assertEquals("azimuth", azimuth.getDeclaredName());
+        assertEquals("φ", azimuth.getDeclaredShortName());
+        assertEquals(2, azimuth.getOwnedRelationship().size());
+
+//      Subclassification
+        Element position3dvectorElement = namedContent.get("Position3dVector");
+        assertNotNull(position3dvectorElement, "Unable to find Element 'Position3dVector' in library ISQSpaceTime.");
+        assertInstanceOf(Subclassification.class, position3dvectorElement);
+        Subclassification position3dvector = (Subclassification) position3dvectorElement;
+        assertEquals("Position3dVector", position3dvector.getDeclaredName());
+        assertEquals(0, position3dvector.getOwnedRelationship().size());
+
+//      Subsetting
+        Element vectorQuantitiesElement = namedContent.get("vectorQuantities");
+        assertNotNull(vectorQuantitiesElement, "Unable to find Element 'vectorQuantities' in library ISQSpaceTime.");
+        assertInstanceOf(Subsetting.class, vectorQuantitiesElement);
+        Subsetting vectorQuantities = (Subsetting) vectorQuantitiesElement;
+        assertEquals("vectorQuantities", vectorQuantities.getDeclaredName());
+        assertEquals(0, vectorQuantities.getOwnedRelationship().size());
+
+//      NamespaceImport
+        Element measurementReferencesElement = namedContent.get("MeasurementReferences");
+        assertNotNull(measurementReferencesElement, "Unable to find Element 'MeasurementReferences' in library ISQSpaceTime.");
+        assertInstanceOf(NamespaceImport.class, measurementReferencesElement);
+        NamespaceImport measurementReferences = (NamespaceImport) measurementReferencesElement;
+        assertEquals(VisibilityKind.PRIVATE, scalarValuesReal.getVisibility());
+        assertEquals("MeasurementReferences", measurementReferences.getDeclaredName());
+        assertEquals(0, measurementReferences.getOwnedRelationship().size());
+
+//      AttributeDefinition
+        Element attributeDefinitionElement = namedContent.get("PhaseVelocityUnit");
+        assertNotNull(attributeDefinitionElement, "Unable to find Element 'PhaseVelocityUnit' in library ISQSpaceTime.");
+        assertInstanceOf(AttributeDefinition.class, attributeDefinitionElement);
+        AttributeDefinition attributeDefinition = (AttributeDefinition) attributeDefinitionElement;
+        assertEquals(VisibilityKind.PRIVATE, scalarValuesReal.getVisibility());
+        assertEquals("PhaseVelocityUnit", attributeDefinition.getDeclaredName());
+        assertEquals(4, attributeDefinition.getOwnedRelationship().size());
+
+//      Redefinition
+        Element redefinitionElement = namedContent.get("exponent");
+        assertNotNull(redefinitionElement, "Unable to find Element 'exponent' in library ISQSpaceTime.");
+        assertInstanceOf(Redefinition.class, redefinitionElement);
+        Redefinition redefinition = (Redefinition) redefinitionElement;
+        assertEquals("exponent", redefinition.getDeclaredName());
+        assertEquals(0, redefinition.getOwnedRelationship().size());
+
+//      LibraryPackage
+        Element libraryPackageElement = namedContent.get("ISQSpaceTime");
+        assertNotNull(libraryPackageElement, "Unable to find LibraryPackage Element 'ISQSpaceTime'.");
+        assertInstanceOf(LibraryPackage.class, libraryPackageElement);
+        LibraryPackage libraryPackage = (LibraryPackage) libraryPackageElement;
+        assertEquals(VisibilityKind.PRIVATE, scalarValuesReal.getVisibility());
+        assertEquals("ISQSpaceTime", libraryPackage.getDeclaredName());
+        assertEquals(186, libraryPackage.getOwnedRelationship().size());
     }
 
+
     protected HashMap<String, Element> parseNamedContent(Resource resource) {
+        resource.getContents();
         HashMap<String, Element> namedContent = new HashMap<>();
         resource.getAllContents().forEachRemaining(eObject -> {
             if (eObject instanceof Element element && element.getDeclaredName() != null) {
